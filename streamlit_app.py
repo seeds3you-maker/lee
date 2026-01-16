@@ -1,6 +1,6 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain import hub  # 이 방식으로 변경하여 에러 방지
+import langchainhub as hub  # 최신 표준 임포트 방식
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_community.utilities import GoogleSearchAPIWrapper
 from langchain.tools import Tool
@@ -43,15 +43,8 @@ def init_agent():
         )
     ]
     
-    # ReAct 프롬프트 로드 (공식 가이드라인 방식)
-    # 여기서 에러가 난다면 라이브러리 설치가 덜 된 것이므로 Reboot이 필요합니다.
-    try:
-        prompt = hub.pull("hwchase17/react")
-    except Exception:
-        # hub.pull이 실패할 경우를 대비한 기본 프롬프트 백업
-        from langchain_core.prompts import PromptTemplate
-        template = "Answer the following questions as best you can. You have access to the following tools: {tools}\n\nUse the following format:\nQuestion: the input question you must answer\nThought: you should always think about what to do\nAction: the action to take, should be one of [{tool_names}]\nAction Input: the input to the action\nObservation: the result of the action\n... (this Thought/Action/Action Input/Observation can repeat N times)\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n\nBegin!\n\nQuestion: {input}\nThought: {agent_scratchpad}"
-        prompt = PromptTemplate.from_template(template)
+    # ReAct 프롬프트 로드 (langchainhub 패키지 직접 사용)
+    prompt = hub.pull("hwchase17/react")
     
     # 에이전트 생성
     agent = create_react_agent(llm, tools, prompt)
@@ -65,7 +58,7 @@ def init_agent():
 try:
     agent_executor = init_agent()
 except Exception as e:
-    st.error(f"에이전트 초기화 중 오류 발생: {e}")
+    st.error(f"에이전트 초기화 오류: {e}")
     st.stop()
 
 # 3. 채팅 UI 구성
@@ -85,10 +78,11 @@ if user_input := st.chat_input("어떤 진로가 고민인가요?"):
         with st.spinner("정보를 검색하며 답변을 생성 중입니다..."):
             prompt_query = f"사용자의 질문: {user_input}. 관련 진로 도서를 검색하여 추천하고 상담해줘."
             try:
+                # 에이전트 실행
                 response = agent_executor.invoke({"input": prompt_query})
                 answer = response["output"]
                 st.markdown(answer)
                 st.session_state.messages.append({"role": "assistant", "content": answer})
             except Exception as e:
                 st.error("답변 생성 과정에서 오류가 발생했습니다.")
-                st.info("API 키 권한이나 할당량을 확인해 주세요.")
+                st.info("API 설정이나 할당량을 확인해 보세요.")
