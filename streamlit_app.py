@@ -1,6 +1,7 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
-import langchainhub as hub  # 최신 표준 임포트 방식
+import langchainhub as hub
+# 임포트 오류 방지를 위한 최신 경로 지정
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_community.utilities import GoogleSearchAPIWrapper
 from langchain.tools import Tool
@@ -43,7 +44,7 @@ def init_agent():
         )
     ]
     
-    # ReAct 프롬프트 로드 (langchainhub 패키지 직접 사용)
+    # ReAct 프롬프트 로드
     prompt = hub.pull("hwchase17/react")
     
     # 에이전트 생성
@@ -58,7 +59,7 @@ def init_agent():
 try:
     agent_executor = init_agent()
 except Exception as e:
-    st.error(f"에이전트 초기화 오류: {e}")
+    st.error(f"초기화 오류가 발생했습니다. 라이브러리 설치 중일 수 있으니 1분 후 새로고침 하세요. ({e})")
     st.stop()
 
 # 3. 채팅 UI 구성
@@ -75,14 +76,13 @@ if user_input := st.chat_input("어떤 진로가 고민인가요?"):
         st.markdown(user_input)
 
     with st.chat_message("assistant"):
-        with st.spinner("정보를 검색하며 답변을 생성 중입니다..."):
+        with st.spinner("정보를 검색 중입니다..."):
             prompt_query = f"사용자의 질문: {user_input}. 관련 진로 도서를 검색하여 추천하고 상담해줘."
             try:
-                # 에이전트 실행
                 response = agent_executor.invoke({"input": prompt_query})
                 answer = response["output"]
                 st.markdown(answer)
                 st.session_state.messages.append({"role": "assistant", "content": answer})
             except Exception as e:
                 st.error("답변 생성 과정에서 오류가 발생했습니다.")
-                st.info("API 설정이나 할당량을 확인해 보세요.")
+                st.info("로그를 확인하거나 잠시 후 다시 시도해 주세요.")
