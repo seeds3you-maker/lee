@@ -1,6 +1,6 @@
 streamlit
-langchain
+langchain>=0.3.0
 langchain-google-genai
 langchain-community
+langchainhub
 google-api-python-client
-google-search-results
