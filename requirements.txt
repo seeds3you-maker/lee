@@ -1,0 +1,6 @@
+streamlit
+langchain
+langchain-google-genai
+langchain-community
+google-api-python-client
+google-search-results
